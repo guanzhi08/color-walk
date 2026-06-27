@@ -10,11 +10,6 @@ class Settings(BaseSettings):
     cloudinary_cloud_name: str
     cloudinary_api_key: str
     cloudinary_api_secret: str
-    allowed_origins: str = "http://localhost:5173"
-
-    @property
-    def origins_list(self) -> list[str]:
-        return [o.strip() for o in self.allowed_origins.split(",")]
 
     class Config:
         env_file = ".env"
