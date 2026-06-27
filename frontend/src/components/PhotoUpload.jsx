@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react'
-import { uploadPhoto } from '../api/photos'
+import client from '../api/client'
 
 const STATUS_LABEL = {
   exact:    { label: '完美符合 ✓', cls: 'badge-exact' },
@@ -7,21 +7,36 @@ const STATUS_LABEL = {
   mismatch: { label: '色系不符 ✗', cls: 'badge-mismatch' },
 }
 
+function getBrowserLocation() {
+  return new Promise((resolve) => {
+    if (!navigator.geolocation) { resolve(null); return }
+    navigator.geolocation.getCurrentPosition(
+      (pos) => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+      ()    => resolve(null),
+      { timeout: 8000, maximumAge: 60000 }
+    )
+  })
+}
+
 export default function PhotoUpload({ spin, onUploaded }) {
-  const [preview, setPreview]   = useState(null)
-  const [file, setFile]         = useState(null)
-  const [result, setResult]     = useState(null)
+  const [preview, setPreview]     = useState(null)
+  const [file, setFile]           = useState(null)
+  const [result, setResult]       = useState(null)
   const [uploading, setUploading] = useState(false)
-  const [error, setError]       = useState(null)
+  const [error, setError]         = useState(null)
+  const [locState, setLocState]   = useState(null) // null | 'locating' | {lat,lng} | 'denied'
   const inputRef = useRef()
 
-  const handleFile = (e) => {
+  const handleFile = async (e) => {
     const f = e.target.files?.[0]
     if (!f) return
     setFile(f)
     setResult(null)
     setError(null)
     setPreview(URL.createObjectURL(f))
+    setLocState('locating')
+    const loc = await getBrowserLocation()
+    setLocState(loc ?? 'denied')
   }
 
   const handleUpload = async () => {
@@ -29,11 +44,18 @@ export default function PhotoUpload({ spin, onUploaded }) {
     setUploading(true)
     setError(null)
     try {
-      const res = await uploadPhoto(file)
+      const fd = new FormData()
+      fd.append('file', file)
+      if (locState && locState !== 'denied' && locState !== 'locating') {
+        fd.append('manual_lat', locState.lat)
+        fd.append('manual_lng', locState.lng)
+      }
+      const res = await client.post('/photos/upload', fd).then(r => r.data)
       setResult(res)
       onUploaded(res.photo)
       setFile(null)
       setPreview(null)
+      setLocState(null)
     } catch (e) {
       setError(e.response?.data?.detail ?? '上傳失敗')
     } finally {
@@ -46,6 +68,14 @@ export default function PhotoUpload({ spin, onUploaded }) {
           style={{ background: hex }} />
   )
 
+  const locBadge = () => {
+    if (!locState || locState === 'locating')
+      return <span className="text-xs text-gray-400 flex items-center gap-1"><span className="animate-spin">⏳</span> 定位中…</span>
+    if (locState === 'denied')
+      return <span className="text-xs text-gray-400">📍 無位置資訊</span>
+    return <span className="text-xs text-pikmin-leaf">📍 {locState.lat.toFixed(5)}, {locState.lng.toFixed(5)}</span>
+  }
+
   return (
     <div className="card flex flex-col gap-4">
       <div className="flex items-center gap-2 mb-1">
@@ -54,7 +84,6 @@ export default function PhotoUpload({ spin, onUploaded }) {
         <span className="font-bold" style={{ color: spin.color_hex }}>{spin.color_name}</span>
       </div>
 
-      {/* Drop zone */}
       <div
         onClick={() => inputRef.current.click()}
         className="border-2 border-dashed border-pikmin-softgreen rounded-xl2 p-6 text-center cursor-pointer
@@ -71,9 +100,18 @@ export default function PhotoUpload({ spin, onUploaded }) {
       </div>
 
       {file && !result && (
-        <button onClick={handleUpload} disabled={uploading} className="btn-primary">
-          {uploading ? '上傳中…' : '上傳照片'}
-        </button>
+        <div className="flex flex-col gap-2">
+          {locState !== null && (
+            <div className="bg-pikmin-mist rounded-xl px-3 py-2">{locBadge()}</div>
+          )}
+          <button
+            onClick={handleUpload}
+            disabled={uploading || locState === 'locating'}
+            className="btn-primary"
+          >
+            {uploading ? '上傳中…' : locState === 'locating' ? '等待定位…' : '上傳照片'}
+          </button>
+        </div>
       )}
 
       {error && <p className="text-red-500 text-sm font-semibold text-center">{error}</p>}
@@ -88,11 +126,10 @@ export default function PhotoUpload({ spin, onUploaded }) {
               {STATUS_LABEL[result.color_match.status]?.label}
             </span>
           </div>
-          {result.photo.lat && (
-            <p className="text-xs text-gray-400">
-              📍 {result.photo.lat.toFixed(5)}, {result.photo.lng.toFixed(5)}
-            </p>
-          )}
+          {result.photo.lat
+            ? <p className="text-xs text-gray-400">📍 {result.photo.lat.toFixed(5)}, {result.photo.lng.toFixed(5)}</p>
+            : <p className="text-xs text-gray-400">📍 無位置資訊</p>
+          }
           <button onClick={() => setResult(null)} className="btn-secondary text-sm mt-1">繼續上傳</button>
         </div>
       )}

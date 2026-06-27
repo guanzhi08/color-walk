@@ -1,6 +1,6 @@
 from datetime import date
 from typing import Optional
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Query
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, Query
 from sqlalchemy.orm import Session, joinedload
 from app.database import get_db
 from app.models.photo import Photo
@@ -18,6 +18,8 @@ router = APIRouter(prefix="/photos", tags=["photos"])
 @router.post("/upload", response_model=PhotoUploadResponse)
 def upload(
     file: UploadFile = File(...),
+    manual_lat: Optional[float] = Form(None),
+    manual_lng: Optional[float] = Form(None),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
@@ -46,8 +48,8 @@ def upload(
         color_spin_id=spin.id,
         cloudinary_url=cld["url"],
         cloudinary_public_id=cld["public_id"],
-        lat=gps[0] if gps else None,
-        lng=gps[1] if gps else None,
+        lat=gps[0] if gps else manual_lat,
+        lng=gps[1] if gps else manual_lng,
         taken_at=taken_at,
         detected_color_id=detected_id,
         color_match_status=match_status,
