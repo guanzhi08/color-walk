@@ -4,7 +4,9 @@ from app.config import get_settings
 
 settings = get_settings()
 
-engine = create_engine(settings.database_url)
+# psycopg3 uses postgresql+psycopg:// dialect; support both URL forms
+_db_url = settings.database_url.replace("postgresql://", "postgresql+psycopg://", 1)
+engine = create_engine(_db_url)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
