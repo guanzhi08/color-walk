@@ -20,7 +20,7 @@ export default function Navbar() {
 
         <div className="flex items-center gap-4">
           <Link to="/" className="text-sm font-semibold text-gray-500 hover:text-pikmin-leaf transition-colors">今日</Link>
-          <Link to="/dashboard" className="text-sm font-semibold text-gray-500 hover:text-pikmin-leaf transition-colors">Dashboard</Link>
+          <Link to="/dashboard" className="text-sm font-semibold text-gray-500 hover:text-pikmin-leaf transition-colors">看板</Link>
           {user?.is_admin && (
             <Link to="/admin" className="text-sm font-semibold text-gray-500 hover:text-pikmin-leaf transition-colors">管理</Link>
           )}

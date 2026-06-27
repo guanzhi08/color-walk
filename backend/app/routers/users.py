@@ -26,7 +26,7 @@ def create_user(body: UserCreate, db: Session = Depends(get_db), _admin=Depends(
 
 
 @router.get("/", response_model=list[UserResponse])
-def list_users(db: Session = Depends(get_db), _admin=Depends(get_admin_user)):
+def list_users(db: Session = Depends(get_db), _user=Depends(get_current_user)):
     return db.query(User).order_by(User.created_at).all()
 
 
