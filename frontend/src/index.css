@@ -1,0 +1,32 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-pikmin-cream font-round text-gray-700 min-h-screen;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-pikmin-green hover:bg-pikmin-leaf text-white font-bold py-2.5 px-6
+           rounded-xl2 shadow-soft transition-all duration-200 active:scale-95
+           disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+  .btn-secondary {
+    @apply bg-white hover:bg-pikmin-mist text-pikmin-leaf font-bold py-2.5 px-6
+           rounded-xl2 border-2 border-pikmin-green shadow-soft transition-all duration-200
+           active:scale-95 disabled:opacity-50;
+  }
+  .card {
+    @apply bg-white rounded-xl3 shadow-card p-5;
+  }
+  .input {
+    @apply w-full border-2 border-pikmin-softgreen rounded-xl focus:outline-none
+           focus:border-pikmin-green bg-pikmin-mist px-4 py-2.5 transition-colors;
+  }
+  .badge-exact   { @apply inline-block px-2 py-0.5 rounded-full text-xs font-bold bg-green-100 text-green-700; }
+  .badge-close   { @apply inline-block px-2 py-0.5 rounded-full text-xs font-bold bg-yellow-100 text-yellow-700; }
+  .badge-mismatch{ @apply inline-block px-2 py-0.5 rounded-full text-xs font-bold bg-red-100 text-red-600; }
+}
