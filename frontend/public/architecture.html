@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Color Walk — 架構說明</title>
+  <style>
+    :root {
+      --green:      #7DC87B;
+      --softgreen:  #A8D8A8;
+      --leaf:       #4A7C59;
+      --cream:      #FFF8F0;
+      --mist:       #E8F5E9;
+      --sky:        #B8E4F9;
+      --card-shadow: 0 4px 20px rgba(74,124,89,0.10);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, "Segoe UI", "Helvetica Neue", sans-serif;
+      background: var(--cream);
+      color: #374151;
+      line-height: 1.65;
+    }
+
+    /* ── header ── */
+    header {
+      background: white;
+      border-bottom: 3px solid var(--softgreen);
+      padding: 24px 32px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    }
+    header .logo { font-size: 2rem; }
+    header h1 { font-size: 1.5rem; font-weight: 800; color: var(--leaf); }
+    header p  { font-size: .85rem; color: #6B7280; margin-top: 2px; }
+
+    /* ── layout ── */
+    main {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 48px 24px 80px;
+      display: flex;
+      flex-direction: column;
+      gap: 56px;
+    }
+
+    /* ── section titles ── */
+    .sec-title {
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: var(--leaf);
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .sec-title::after {
+      content: "";
+      flex: 1;
+      height: 2px;
+      background: var(--softgreen);
+      border-radius: 2px;
+    }
+
+    /* ── cards ── */
+    .card {
+      background: white;
+      border-radius: 20px;
+      box-shadow: var(--card-shadow);
+      padding: 24px 28px;
+    }
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 18px;
+    }
+    .service-card {
+      background: white;
+      border-radius: 18px;
+      box-shadow: var(--card-shadow);
+      padding: 22px 22px 18px;
+      border-top: 4px solid var(--green);
+      transition: transform .18s, box-shadow .18s;
+    }
+    .service-card:hover { transform: translateY(-3px); box-shadow: 0 8px 28px rgba(74,124,89,0.16); }
+    .service-card .icon { font-size: 2rem; margin-bottom: 10px; }
+    .service-card h3 { font-size: 1rem; font-weight: 800; color: var(--leaf); margin-bottom: 4px; }
+    .service-card .provider { font-size: .75rem; font-weight: 700; color: #6B7280; margin-bottom: 10px; }
+    .service-card p { font-size: .84rem; color: #4B5563; }
+    .tag {
+      display: inline-block;
+      background: var(--mist);
+      color: var(--leaf);
+      font-size: .7rem;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 99px;
+      margin: 2px 2px 0 0;
+    }
+
+    /* ── flow diagram ── */
+    .flow {
+      display: flex;
+      align-items: stretch;
+      gap: 0;
+      overflow-x: auto;
+      padding-bottom: 4px;
+    }
+    .flow-step {
+      flex: 1;
+      min-width: 120px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+    .flow-box {
+      background: white;
+      border: 2.5px solid var(--softgreen);
+      border-radius: 14px;
+      padding: 14px 10px;
+      font-size: .82rem;
+      font-weight: 700;
+      color: var(--leaf);
+      width: 100%;
+      min-height: 70px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      position: relative;
+    }
+    .flow-box .step-icon { font-size: 1.5rem; }
+    .flow-arrow {
+      display: flex;
+      align-items: center;
+      padding: 0 4px;
+      color: var(--green);
+      font-size: 1.4rem;
+      font-weight: 900;
+      flex-shrink: 0;
+      margin-top: -10px; /* align with box center */
+    }
+    .flow-label {
+      font-size: .72rem;
+      color: #6B7280;
+      margin-top: 6px;
+      max-width: 110px;
+    }
+
+    /* ── tech stack table ── */
+    .stack-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .stack-table th {
+      background: var(--mist);
+      color: var(--leaf);
+      font-size: .8rem;
+      font-weight: 800;
+      padding: 10px 16px;
+      text-align: left;
+    }
+    .stack-table td {
+      padding: 11px 16px;
+      font-size: .85rem;
+      border-bottom: 1px solid #F0F0F0;
+      vertical-align: top;
+    }
+    .stack-table tr:last-child td { border-bottom: none; }
+    .stack-table tr:hover td { background: #FAFFFE; }
+    .stack-table td:first-child { font-weight: 700; color: #374151; width: 140px; }
+    .stack-table td code {
+      font-family: "SFMono-Regular", Consolas, monospace;
+      background: #F3F4F6;
+      padding: 1px 6px;
+      border-radius: 5px;
+      font-size: .82rem;
+    }
+
+    /* ── architecture diagram ── */
+    .arch {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 14px;
+    }
+    .arch-layer {
+      background: var(--mist);
+      border-radius: 16px;
+      padding: 16px 14px;
+    }
+    .arch-layer h4 {
+      font-size: .78rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      color: var(--leaf);
+      margin-bottom: 12px;
+      text-align: center;
+    }
+    .arch-item {
+      background: white;
+      border-radius: 10px;
+      padding: 10px 12px;
+      font-size: .82rem;
+      font-weight: 600;
+      color: #374151;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+    }
+    .arch-item:last-child { margin-bottom: 0; }
+    .arch-item .dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--green);
+      flex-shrink: 0;
+    }
+
+    /* ── data model ── */
+    .model-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 14px;
+    }
+    .model-card {
+      background: white;
+      border-radius: 14px;
+      box-shadow: var(--card-shadow);
+      overflow: hidden;
+    }
+    .model-card .model-header {
+      background: var(--leaf);
+      color: white;
+      font-size: .82rem;
+      font-weight: 800;
+      padding: 8px 14px;
+    }
+    .model-card .model-field {
+      padding: 5px 14px;
+      font-size: .78rem;
+      color: #4B5563;
+      border-bottom: 1px solid #F5F5F5;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .model-card .model-field:last-child { border-bottom: none; }
+    .model-card .field-type {
+      font-size: .7rem;
+      color: #9CA3AF;
+      font-family: monospace;
+    }
+    .model-card .pk { color: var(--green); font-weight: 800; }
+
+    /* ── deploy steps ── */
+    .deploy-steps { list-style: none; display: flex; flex-direction: column; gap: 12px; }
+    .deploy-step {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      background: white;
+      border-radius: 14px;
+      padding: 14px 18px;
+      box-shadow: var(--card-shadow);
+    }
+    .step-num {
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      background: var(--green);
+      color: white;
+      font-size: .82rem;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .deploy-step p { font-size: .86rem; color: #374151; }
+    .deploy-step strong { color: var(--leaf); }
+
+    /* ── footer ── */
+    footer {
+      text-align: center;
+      font-size: .78rem;
+      color: #9CA3AF;
+      padding: 32px;
+    }
+
+    @media (max-width: 640px) {
+      .arch { grid-template-columns: 1fr; }
+      .flow { flex-direction: column; align-items: stretch; }
+      .flow-arrow { transform: rotate(90deg); align-self: center; margin: 0; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">🌿</div>
+  <div>
+    <h1>Color Walk — 架構說明</h1>
+    <p>系統架構、服務流程與技術選型一覽</p>
+  </div>
+</header>
+
+<main>
+
+  <!-- ① 系統架構 -->
+  <section>
+    <div class="sec-title">🏗️ 系統架構</div>
+    <div class="card">
+      <div class="arch">
+        <div class="arch-layer">
+          <h4>前端 Frontend</h4>
+          <div class="arch-item"><div class="dot"></div>React 18 + Vite 5</div>
+          <div class="arch-item"><div class="dot"></div>Tailwind CSS 3</div>
+          <div class="arch-item"><div class="dot"></div>React Router v6</div>
+          <div class="arch-item"><div class="dot"></div>React Leaflet 地圖</div>
+          <div class="arch-item"><div class="dot"></div>Axios HTTP 客戶端</div>
+          <div class="arch-item"><div class="dot"></div>SVG 顏色輪盤</div>
+        </div>
+        <div class="arch-layer">
+          <h4>後端 Backend</h4>
+          <div class="arch-item"><div class="dot"></div>FastAPI + Uvicorn</div>
+          <div class="arch-item"><div class="dot"></div>SQLAlchemy 2.0 ORM</div>
+          <div class="arch-item"><div class="dot"></div>Pydantic v2 資料驗證</div>
+          <div class="arch-item"><div class="dot"></div>純 Python JWT (HS256)</div>
+          <div class="arch-item"><div class="dot"></div>bcrypt 密碼雜湊</div>
+          <div class="arch-item"><div class="dot"></div>Pillow 影像處理</div>
+        </div>
+        <div class="arch-layer">
+          <h4>外部服務</h4>
+          <div class="arch-item"><div class="dot"></div>Neon.tech PostgreSQL</div>
+          <div class="arch-item"><div class="dot"></div>Cloudinary 圖片儲存</div>
+          <div class="arch-item"><div class="dot"></div>OpenStreetMap 地圖</div>
+          <div class="arch-item"><div class="dot"></div>Render.com 部署</div>
+          <div class="arch-item"><div class="dot"></div>UptimeRobot 喚醒</div>
+        </div>
+      </div>
+
+      <div style="margin-top:20px; padding:16px; background:var(--mist); border-radius:14px; font-size:.85rem; color:#4B5563;">
+        <strong style="color:var(--leaf);">單一服務架構：</strong>
+        前端 React 應用程式以 Vite 打包後輸出至 <code style="font-family:monospace; background:#E5E7EB; padding:1px 6px; border-radius:4px;">backend/static/</code>，
+        由 FastAPI 的靜態檔案路由直接提供，所有 <code style="font-family:monospace; background:#E5E7EB; padding:1px 6px; border-radius:4px;">/api/*</code> 請求打到後端，
+        其餘路徑回傳 <code style="font-family:monospace; background:#E5E7EB; padding:1px 6px; border-radius:4px;">index.html</code> 做 SPA fallback。
+        前後端同源，無需 CORS 設定。
+      </div>
+    </div>
+  </section>
+
+  <!-- ② 使用者操作流程 -->
+  <section>
+    <div class="sec-title">🔄 使用者操作流程</div>
+    <div class="card">
+      <div class="flow">
+        <div class="flow-step">
+          <div class="flow-box"><span class="step-icon">🔐</span>登入</div>
+          <div class="flow-label">輸入帳號密碼<br>取得 JWT Token</div>
+        </div>
+        <div class="flow-arrow">›</div>
+        <div class="flow-step">
+          <div class="flow-box"><span class="step-icon">🎡</span>轉輪盤</div>
+          <div class="flow-label">每日一次<br>取得今日顏色</div>
+        </div>
+        <div class="flow-arrow">›</div>
+        <div class="flow-step">
+          <div class="flow-box"><span class="step-icon">📷</span>拍照上傳</div>
+          <div class="flow-label">EXIF GPS 擷取<br>或瀏覽器定位</div>
+        </div>
+        <div class="flow-arrow">›</div>
+        <div class="flow-step">
+          <div class="flow-box"><span class="step-icon">🎨</span>色彩分析</div>
+          <div class="flow-label">Pillow 偵測主色<br>比對輪盤顏色</div>
+        </div>
+        <div class="flow-arrow">›</div>
+        <div class="flow-step">
+          <div class="flow-box"><span class="step-icon">☁️</span>儲存上傳</div>
+          <div class="flow-label">Cloudinary 儲存<br>縮圖 640×480</div>
+        </div>
+        <div class="flow-arrow">›</div>
+        <div class="flow-step">
+          <div class="flow-box"><span class="step-icon">🗺️</span>看板展示</div>
+          <div class="flow-label">照片牆 + 地圖<br>燈箱放大瀏覽</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ③ 使用服務 -->
+  <section>
+    <div class="sec-title">☁️ 使用的外部服務</div>
+    <div class="cards-grid">
+
+      <div class="service-card">
+        <div class="icon">🗄️</div>
+        <h3>Neon.tech</h3>
+        <div class="provider">PostgreSQL 資料庫</div>
+        <p>Serverless PostgreSQL，支援 Connection Pooling。儲存使用者、顏色輪盤、照片元數據。</p>
+        <div style="margin-top:12px">
+          <span class="tag">psycopg3</span>
+          <span class="tag">SQLAlchemy 2</span>
+          <span class="tag">SSL 加密</span>
+        </div>
+      </div>
+
+      <div class="service-card">
+        <div class="icon">🖼️</div>
+        <h3>Cloudinary</h3>
+        <div class="provider">圖片儲存與 CDN</div>
+        <p>照片與頭像上傳後儲存於 Cloudinary，自動提供 CDN 加速與圖片轉換。</p>
+        <div style="margin-top:12px">
+          <span class="tag">頭像上傳</span>
+          <span class="tag">照片儲存</span>
+          <span class="tag">CDN 加速</span>
+        </div>
+      </div>
+
+      <div class="service-card">
+        <div class="icon">🌍</div>
+        <h3>OpenStreetMap</h3>
+        <div class="provider">地圖磚片服務</div>
+        <p>透過 React Leaflet 在看板燈箱中顯示照片拍攝地點，使用 OSM 免費圖磚。</p>
+        <div style="margin-top:12px">
+          <span class="tag">react-leaflet</span>
+          <span class="tag">免費使用</span>
+          <span class="tag">EXIF GPS</span>
+        </div>
+      </div>
+
+      <div class="service-card">
+        <div class="icon">🚀</div>
+        <h3>Render.com</h3>
+        <div class="provider">雲端部署平台</div>
+        <p>部署單一 Python Web Service，Build Command 同時打包前端並安裝後端依賴。</p>
+        <div style="margin-top:12px">
+          <span class="tag">Free Tier</span>
+          <span class="tag">Auto Deploy</span>
+          <span class="tag">環境變數管理</span>
+        </div>
+      </div>
+
+      <div class="service-card">
+        <div class="icon">⏰</div>
+        <h3>UptimeRobot</h3>
+        <div class="provider">服務監控 / 喚醒</div>
+        <p>Render 免費方案閒置後會休眠，UptimeRobot 每 5 分鐘 ping <code>/health</code> 保持喚醒。</p>
+        <div style="margin-top:12px">
+          <span class="tag">免費監控</span>
+          <span class="tag">/health 路由</span>
+          <span class="tag">防止休眠</span>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ④ API 路由 -->
+  <section>
+    <div class="sec-title">🔌 API 路由一覽</div>
+    <div class="card" style="padding:0; overflow:hidden;">
+      <table class="stack-table">
+        <thead>
+          <tr>
+            <th>方法</th>
+            <th>路徑</th>
+            <th>說明</th>
+            <th>權限</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td><span style="color:#16A34A;font-weight:800;">POST</span></td><td><code>/api/auth/login</code></td><td>帳號密碼登入，回傳 JWT</td><td>公開</td></tr>
+          <tr><td><span style="color:#2563EB;font-weight:800;">GET</span></td><td><code>/api/users/</code></td><td>列出所有使用者</td><td>登入</td></tr>
+          <tr><td><span style="color:#16A34A;font-weight:800;">POST</span></td><td><code>/api/users/</code></td><td>新增使用者</td><td>管理員</td></tr>
+          <tr><td><span style="color:#DC2626;font-weight:800;">DELETE</span></td><td><code>/api/users/{id}</code></td><td>刪除使用者</td><td>管理員</td></tr>
+          <tr><td><span style="color:#16A34A;font-weight:800;">POST</span></td><td><code>/api/users/me/avatar</code></td><td>上傳個人頭像</td><td>登入</td></tr>
+          <tr><td><span style="color:#2563EB;font-weight:800;">GET</span></td><td><code>/api/wheel/today</code></td><td>取得今日輪盤結果</td><td>登入</td></tr>
+          <tr><td><span style="color:#16A34A;font-weight:800;">POST</span></td><td><code>/api/wheel/spin</code></td><td>轉動輪盤（每日一次）</td><td>登入</td></tr>
+          <tr><td><span style="color:#16A34A;font-weight:800;">POST</span></td><td><code>/api/photos/upload</code></td><td>上傳照片（需先轉輪盤）</td><td>登入</td></tr>
+          <tr><td><span style="color:#2563EB;font-weight:800;">GET</span></td><td><code>/api/photos/</code></td><td>查詢照片列表（可篩選日期/使用者）</td><td>登入</td></tr>
+          <tr><td><span style="color:#DC2626;font-weight:800;">DELETE</span></td><td><code>/api/photos/{id}</code></td><td>刪除照片</td><td>本人/管理員</td></tr>
+          <tr><td><span style="color:#2563EB;font-weight:800;">GET</span></td><td><code>/health</code></td><td>健康檢查（UptimeRobot 使用）</td><td>公開</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ⑤ 資料模型 -->
+  <section>
+    <div class="sec-title">🗃️ 資料模型</div>
+    <div class="model-grid">
+
+      <div class="model-card">
+        <div class="model-header">👤 User（使用者）</div>
+        <div class="model-field"><span class="pk">id</span><span class="field-type">Integer PK</span></div>
+        <div class="model-field"><span>username</span><span class="field-type">String unique</span></div>
+        <div class="model-field"><span>hashed_password</span><span class="field-type">String</span></div>
+        <div class="model-field"><span>is_admin</span><span class="field-type">Boolean</span></div>
+        <div class="model-field"><span>avatar_url</span><span class="field-type">String?</span></div>
+        <div class="model-field"><span>created_at</span><span class="field-type">DateTime</span></div>
+      </div>
+
+      <div class="model-card">
+        <div class="model-header">🎡 ColorSpin（輪盤）</div>
+        <div class="model-field"><span class="pk">id</span><span class="field-type">Integer PK</span></div>
+        <div class="model-field"><span>user_id</span><span class="field-type">FK → User</span></div>
+        <div class="model-field"><span>date</span><span class="field-type">Date unique/user</span></div>
+        <div class="model-field"><span>color_id</span><span class="field-type">String</span></div>
+        <div class="model-field"><span>color_name</span><span class="field-type">String</span></div>
+        <div class="model-field"><span>color_hex</span><span class="field-type">String</span></div>
+      </div>
+
+      <div class="model-card">
+        <div class="model-header">📷 Photo（照片）</div>
+        <div class="model-field"><span class="pk">id</span><span class="field-type">Integer PK</span></div>
+        <div class="model-field"><span>user_id</span><span class="field-type">FK → User</span></div>
+        <div class="model-field"><span>color_spin_id</span><span class="field-type">FK → ColorSpin</span></div>
+        <div class="model-field"><span>cloudinary_url</span><span class="field-type">String</span></div>
+        <div class="model-field"><span>lat / lng</span><span class="field-type">Float?</span></div>
+        <div class="model-field"><span>taken_at</span><span class="field-type">DateTime?</span></div>
+        <div class="model-field"><span>detected_color_id</span><span class="field-type">String?</span></div>
+        <div class="model-field"><span>color_match_status</span><span class="field-type">exact/close/mismatch</span></div>
+        <div class="model-field"><span>upload_date</span><span class="field-type">Date</span></div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ⑥ 技術選型 -->
+  <section>
+    <div class="sec-title">🔧 技術選型說明</div>
+    <div class="card" style="padding:0; overflow:hidden;">
+      <table class="stack-table">
+        <thead>
+          <tr><th>功能</th><th>選擇</th><th>原因</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>JWT 驗證</td>
+            <td><code>hmac + hashlib</code></td>
+            <td>python-jose 與系統 cryptography 衝突；pure Python HS256 無依賴</td>
+          </tr>
+          <tr>
+            <td>密碼雜湊</td>
+            <td><code>bcrypt</code> 直接使用</td>
+            <td>passlib 在新版 bcrypt 有 <code>__about__</code> AttributeError</td>
+          </tr>
+          <tr>
+            <td>資料庫驅動</td>
+            <td><code>psycopg[binary] 3.3.4</code></td>
+            <td>psycopg2-binary 在 Python 3.14 有 undefined symbol；psycopg3 原生支援</td>
+          </tr>
+          <tr>
+            <td>EXIF 擷取</td>
+            <td><code>getexif().get_ifd(0x8825)</code></td>
+            <td>現代 Pillow API；舊 _getexif() 已棄用。Samsung 手機 NaN 座標需過濾</td>
+          </tr>
+          <tr>
+            <td>GPS Fallback</td>
+            <td>瀏覽器 Geolocation API</td>
+            <td>Samsung 等 Android 手機拍照 EXIF 可能為 NaN；改用瀏覽器定位</td>
+          </tr>
+          <tr>
+            <td>前後端整合</td>
+            <td>Vite build → FastAPI static</td>
+            <td>單一 Render 服務，同源避免 CORS，免費方案更容易管理</td>
+          </tr>
+          <tr>
+            <td>地圖</td>
+            <td>React Leaflet + OSM</td>
+            <td>免費、無 API Key 限制、輕量</td>
+          </tr>
+          <tr>
+            <td>管理員建立</td>
+            <td>環境變數自動建立</td>
+            <td>Render 免費方案無 Shell；首次啟動若 DB 為空則自動建立管理員帳號</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ⑦ 部署流程 -->
+  <section>
+    <div class="sec-title">🚀 部署流程</div>
+    <ul class="deploy-steps">
+      <li class="deploy-step">
+        <div class="step-num">1</div>
+        <div>
+          <p><strong>Neon.tech 建立資料庫</strong><br>
+          免費 PostgreSQL，複製連線字串（含 <code>?sslmode=require</code>）備用。</p>
+        </div>
+      </li>
+      <li class="deploy-step">
+        <div class="step-num">2</div>
+        <div>
+          <p><strong>Cloudinary 取得憑證</strong><br>
+          Cloud Name、API Key、API Secret 填入 Render 環境變數。</p>
+        </div>
+      </li>
+      <li class="deploy-step">
+        <div class="step-num">3</div>
+        <div>
+          <p><strong>GitHub Push 觸發 Render 部署</strong><br>
+          Render 執行 Build Command：<code>cd frontend &amp;&amp; npm run build</code> → <code>pip install -r requirements.txt</code>。</p>
+        </div>
+      </li>
+      <li class="deploy-step">
+        <div class="step-num">4</div>
+        <div>
+          <p><strong>自動建立管理員帳號</strong><br>
+          設定 <code>ADMIN_USERNAME</code> + <code>ADMIN_PASSWORD</code> 環境變數，首次啟動 DB 為空時自動新增管理員。</p>
+        </div>
+      </li>
+      <li class="deploy-step">
+        <div class="step-num">5</div>
+        <div>
+          <p><strong>UptimeRobot 設定監控</strong><br>
+          監控 <code>https://color-walk.onrender.com/health</code>，每 5 分鐘 ping 一次防止 Free Tier 休眠。</p>
+        </div>
+      </li>
+    </ul>
+  </section>
+
+  <!-- ⑧ 顏色系統 -->
+  <section>
+    <div class="sec-title">🎨 顏色系統（9色輪盤）</div>
+    <div class="card">
+      <div style="display:flex; flex-wrap:wrap; gap:12px; justify-content:center;">
+        <div style="display:flex;flex-direction:column;align-items:center;gap:6px">
+          <div style="width:52px;height:52px;border-radius:50%;background:#DC2626;box-shadow:0 3px 10px rgba(0,0,0,.15)"></div>
+          <span style="font-size:.78rem;font-weight:700;color:#374151">紅色</span>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:6px">
+          <div style="width:52px;height:52px;border-radius:50%;background:#EA580C;box-shadow:0 3px 10px rgba(0,0,0,.15)"></div>
+          <span style="font-size:.78rem;font-weight:700;color:#374151">橙色</span>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:6px">
+          <div style="width:52px;height:52px;border-radius:50%;background:#CA8A04;box-shadow:0 3px 10px rgba(0,0,0,.15)"></div>
+          <span style="font-size:.78rem;font-weight:700;color:#374151">黃色</span>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:6px">
+          <div style="width:52px;height:52px;border-radius:50%;background:#16A34A;box-shadow:0 3px 10px rgba(0,0,0,.15)"></div>
+          <span style="font-size:.78rem;font-weight:700;color:#374151">綠色</span>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:6px">
+          <div style="width:52px;height:52px;border-radius:50%;background:#2563EB;box-shadow:0 3px 10px rgba(0,0,0,.15)"></div>
+          <span style="font-size:.78rem;font-weight:700;color:#374151">藍色</span>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:6px">
+          <div style="width:52px;height:52px;border-radius:50%;background:#7C3AED;box-shadow:0 3px 10px rgba(0,0,0,.15)"></div>
+          <span style="font-size:.78rem;font-weight:700;color:#374151">紫色</span>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:6px">
+          <div style="width:52px;height:52px;border-radius:50%;background:#DB2777;box-shadow:0 3px 10px rgba(0,0,0,.15)"></div>
+          <span style="font-size:.78rem;font-weight:700;color:#374151">粉紅色</span>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:6px">
+          <div style="width:52px;height:52px;border-radius:50%;background:#92400E;box-shadow:0 3px 10px rgba(0,0,0,.15)"></div>
+          <span style="font-size:.78rem;font-weight:700;color:#374151">棕色</span>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:6px">
+          <div style="width:52px;height:52px;border-radius:50%;background:#6B7280;box-shadow:0 3px 10px rgba(0,0,0,.15)"></div>
+          <span style="font-size:.78rem;font-weight:700;color:#374151">灰色</span>
+        </div>
+      </div>
+      <div style="margin-top:20px; display:flex; gap:12px; flex-wrap:wrap; justify-content:center; font-size:.82rem; color:#4B5563;">
+        <div style="display:flex;align-items:center;gap:6px">
+          <span style="display:inline-block;width:14px;height:14px;border-radius:50%;background:#BBF7D0;border:2px solid #16A34A;"></span>
+          <strong style="color:#16A34A">完美</strong>：主色完全吻合
+        </div>
+        <div style="display:flex;align-items:center;gap:6px">
+          <span style="display:inline-block;width:14px;height:14px;border-radius:50%;background:#FEF08A;border:2px solid #CA8A04;"></span>
+          <strong style="color:#CA8A04">接近</strong>：相鄰色系
+        </div>
+        <div style="display:flex;align-items:center;gap:6px">
+          <span style="display:inline-block;width:14px;height:14px;border-radius:50%;background:#FECACA;border:2px solid #DC2626;"></span>
+          <strong style="color:#DC2626">不符</strong>：色系不吻合
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  🌿 Color Walk &nbsp;·&nbsp; 架構文件 &nbsp;·&nbsp; 以 FastAPI + React 建構，部署於 Render.com
+</footer>
+
+</body>
+</html>
