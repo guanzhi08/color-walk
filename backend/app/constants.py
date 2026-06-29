@@ -7,7 +7,7 @@ COLOR_PALETTE = [
     {"id": "purple",  "name": "紫色",   "hex": "#7C3AED"},
     {"id": "pink",    "name": "粉紅色", "hex": "#DB2777"},
     {"id": "brown",   "name": "棕色",   "hex": "#92400E"},
-    {"id": "neutral", "name": "中性色", "hex": "#6B7280"},
+    {"id": "neutral", "name": "灰色",   "hex": "#6B7280"},
 ]
 
 COLOR_ADJACENCY: dict[str, list[str]] = {
